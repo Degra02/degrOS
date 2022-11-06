@@ -116,7 +116,10 @@ impl Writer {
                 // Printable character or newline:
                 0x20..=0x7e => self.write_byte(byte),
 
-                // Fallback character if byte is not printable
+                // Detects newline char
+                0x0A => self.write_byte(b'\n'),
+
+                // Fallback character => ■
                 _ => self.write_byte(0xfe),
             }
         }

@@ -5,8 +5,7 @@ pub fn test_buffer() {
 
     let mut writer = Writer::new(0 as usize, 0 as usize, cc);
 
-    writer.write_string("Welcome to degrOS!");
-    writer.write_byte(b'\n');
-    writer.write_string("Currently you can't do anything!");
+    writer.write_string("Welcome to degrOS!\n");
+    writer.write_string("Currently you can't do anything!\n");
     // write!(writer, "Welcome to degrOS!").unwrap();
 }
