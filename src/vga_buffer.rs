@@ -181,7 +181,7 @@ impl Writer {
     }
 }
 
-/// Defining a static WRITER so it doesn't have to be
+/// WRITER so it doesn't have to be
 /// instantiated each time it needs to be used
 use lazy_static::lazy_static;
 use spin::Mutex;
@@ -196,8 +196,8 @@ lazy_static! {
 }
 
 // Macros for quicker printing (errors too)
-
 #[macro_export]
+///Directly prints to the static WRITER
 macro_rules! print {
     ($($arg:tt)*) => {
         ($crate::vga_buffer::_print(format_args!($($arg)*)))
@@ -205,6 +205,8 @@ macro_rules! print {
 }
 
 #[macro_export]
+/// Directly prints to the static WRITER appending 
+/// a newline at the end
 macro_rules! println {
     () => {
         $crate::print!("\n");
