@@ -8,7 +8,11 @@ use core::panic::PanicInfo;
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
-    test::test_buffer();
+    // test::test_buffer();
+
+    use core::fmt::Write;
+    vga_buffer::WRITER.lock().write_str("Welcome to ").unwrap();
+    write!(vga_buffer::WRITER.lock(), "{}!\n Culone", "degrOS").unwrap();
     loop {}
 }
 

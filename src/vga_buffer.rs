@@ -135,13 +135,26 @@ impl Writer {
         self.column_position = 0;
     }
 
-    fn clear_row(&mut self, row: usize) {
-        let blank = ScreenChar {
-            ascii_character: b' ',
-            color_code: self.color_code,
-        };
-        for pos in 0..BUFFER_WIDTH {
-            self.buffer.chars[row][pos].write(blank);
+    fn clear_all(&mut self, row: usize) {
+        let blank = ScreenChar::new(b' ', self.color_code);
+        for line in 0..BUFFER_HEIGHT - 1 {
+            for col in 0..BUFFER_WIDTH - 1 {
+                self.buffer.chars[line][col].write(blank);
+            }
         }
     }
+}
+
+/// Defining a static WRITER so it doesn't have to be
+/// instantiated each time it needs to be used
+use lazy_static::lazy_static;
+use spin::Mutex;
+
+lazy_static! {
+    pub static ref WRITER: Mutex<Writer> = Mutex::new(Writer {
+        column_position: 0,
+        row_position: 0,
+        color_code: ColorCode::new(Color::White, Color::Black),
+        buffer: unsafe { &mut *(0xb8000 as *mut Buffer) },
+    });
 }
