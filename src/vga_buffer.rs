@@ -182,7 +182,7 @@ impl Writer {
 }
 
 /// WRITER so it doesn't have to be
-/// instantiated each time it needs to be used
+/// passed around each time it needs to be used
 use lazy_static::lazy_static;
 use spin::Mutex;
 

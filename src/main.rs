@@ -6,15 +6,15 @@
 
 use core::panic::PanicInfo;
 
-#[cfg(test)]
 mod test;
 mod vga_buffer;
+mod serial;
 mod utils;
 
 /// First function called at OS startup
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
-    utils::startup_message();
+    utils::serial_startup_message();
     
     #[cfg(test)]
     test_main();
@@ -23,6 +23,7 @@ pub extern "C" fn _start() -> ! {
 }
 
 /// This function is called on panic.
+#[cfg(not(test))]
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
     // With the println! macro, invoking
@@ -31,10 +32,20 @@ fn panic(_info: &PanicInfo) -> ! {
     loop {}
 }
 
+
+#[cfg(test)]
+#[panic_handler]
+fn panic(_info: &PanicInfo) -> ! {
+    serial_println!("[failed]\n");
+    serial_println!("Error {}", _info);
+    exit_qemu(QemuExitCode::Failed);
+    loop{}
+}
+
 /// Test runner framework
 #[cfg(test)]
 fn test_runner(tests: &[&dyn Fn()]) {
-    println!("Running {} tests", tests.len());
+    serial_println!("Running {} tests", tests.len());
     for test in tests {
         test();
     }

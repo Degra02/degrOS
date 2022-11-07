@@ -1,25 +1,25 @@
-use crate::{print, println, vga_buffer::*};
+use crate::{print, println, vga_buffer::*, serial_print, serial_println};
 
 fn ok() {
-    print!("[");
+    serial_print!("...[");
      WRITER.lock().set_colorcode(
         ColorCode::new(Color::Green, Color::Black)   
     );
-    print!("OK");
+    serial_print!("OK");
     WRITER.lock().set_colorcode(ColorCode::new_default());
-    println!("]");
+    serial_println!("]");
 }
 
 
-#[test_case]
+// #[test_case]
 pub fn test_buffer() {
-    let test_str = "Buffer testing...";
+    let test_str = "Buffer testing";
     let mut i: u8 = 0;
     let mut color_code: ColorCode;
     for c in test_str.bytes() {
         color_code = ColorCode::new(Color::White, Color::from_u8(i));
         WRITER.lock().set_colorcode(color_code);
-        WRITER.lock().write_byte(c);
+        // serial_print!(c);
         i += 1;
     }
     WRITER.lock().set_colorcode(ColorCode::new_default());
@@ -27,8 +27,21 @@ pub fn test_buffer() {
 }
 
 #[test_case]
+pub fn serial_test_buffer() {
+    serial_print!("VGA buffer testing");
+    println!("\n");
+    ok();
+}
+
+#[test_case]
 pub fn trivial_assertion() {
-    print!("Trivial assertion...");
+    serial_print!("Trivial assertion");
     assert_eq!(1, 1);
+    ok();
+}
+
+#[test_case]
+pub fn your_mother() {
+    serial_print!("Your mother");
     ok();
 }
