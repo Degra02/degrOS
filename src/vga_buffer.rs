@@ -22,6 +22,30 @@ pub enum Color {
     White = 15,
 }
 
+impl Color {
+    pub fn from_u8(i: u8) -> Color {
+        match i {
+            0 => Color::Black,
+            1 => Color::Blue,
+            2 => Color::Green,
+            3 => Color::Cyan,
+            4 => Color::Red,
+            5 => Color::Magenta,
+            6 => Color::Brown,
+            7 => Color::LightGray,
+            8 => Color::DarkGray,
+            9 => Color::LightBlue,
+            10 => Color::LightGreen,
+            11 => Color::LightCyan,
+            12 => Color::LightRed,
+            13 => Color::Pink,
+            14 => Color::Yellow,
+            15 => Color::White,
+            _ => Color::Black,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(transparent)]
 pub struct ColorCode(u8);
@@ -30,6 +54,11 @@ impl ColorCode {
     /// Creates a new [`ColorCode`].
     pub fn new(foreground: Color, background: Color) -> ColorCode {
         ColorCode((background as u8) << 4 | (foreground as u8))
+    }
+
+    /// New ColorCode with default values
+    pub fn new_default() -> ColorCode {
+        ColorCode((Color::Black as u8) << 4 | (Color::White as u8))
     }
 }
 
@@ -78,6 +107,8 @@ impl fmt::Write for Writer {
 }
 
 impl Writer {
+    /// Creates a new Writer instance from column position, row position
+    /// and ColorCode
     pub fn new(cpos: usize, rpos: usize, cc: ColorCode) -> Writer {
         Writer {
             column_position: cpos,
@@ -85,6 +116,11 @@ impl Writer {
             color_code: cc.clone(),
             buffer: unsafe { &mut *(0xb8000 as *mut Buffer) },
         }
+    }
+
+    /// Change the Writer color code
+    pub fn set_colorcode(&mut self, cc: ColorCode) {
+        self.color_code = cc;
     }
 
     pub fn write_byte(&mut self, byte: u8) {
@@ -157,4 +193,30 @@ lazy_static! {
         color_code: ColorCode::new(Color::White, Color::Black),
         buffer: unsafe { &mut *(0xb8000 as *mut Buffer) },
     });
+}
+
+// Macros for quicker printing (errors too)
+
+#[macro_export]
+macro_rules! print {
+    ($($arg:tt)*) => {
+        ($crate::vga_buffer::_print(format_args!($($arg)*)))
+    }
+}
+
+#[macro_export]
+macro_rules! println {
+    () => {
+        $crate::print!("\n");
+    };
+
+    ($($arg:tt)*) => {
+      ($crate::print!("{}\n", format_args!($($arg)*)))
+    };
+}
+
+#[doc(hidden)]
+pub fn _print(args: fmt::Arguments) {
+    use core::fmt::Write;
+    WRITER.lock().write_fmt(args).unwrap();
 }

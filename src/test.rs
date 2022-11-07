@@ -1,11 +1,23 @@
-use crate::vga_buffer::*;
+use crate::{print, println, vga_buffer::*};
 
+#[test_case]
 pub fn test_buffer() {
-    let cc = ColorCode::new(Color::White, Color::Black);
+    let test_str = "Buffer testing";
+    let mut i: u8 = 0;
+    let mut color_code: ColorCode;
+    for c in test_str.bytes() {
+        color_code = ColorCode::new(Color::White, Color::from_u8(i));
+        WRITER.lock().set_colorcode(color_code);
+        WRITER.lock().write_byte(c);
+        i += 1;
+    }
+    WRITER.lock().set_colorcode(ColorCode::new_default());
+    println!("...[ok]");
+}
 
-    let mut writer = Writer::new(0 as usize, 0 as usize, cc);
-
-    writer.write_string("Welcome to degrOS!\n");
-    writer.write_string("Currently you can't do anything!\n");
-    // write!(writer, "Welcome to degrOS!").unwrap();
+#[test_case]
+pub fn trivial_assertion() {
+    print!("Trivial assertion...");
+    assert_eq!(1, 1);
+    println!("[ok]");
 }
