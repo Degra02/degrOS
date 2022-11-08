@@ -1,6 +1,6 @@
 use crate::{print, println, vga_buffer::*, serial_print, serial_println};
 
-fn ok() {
+pub fn ok() {
     serial_print!("...[");
      WRITER.lock().set_colorcode(
         ColorCode::new(Color::Green, Color::Black)   
@@ -23,25 +23,21 @@ pub fn test_buffer() {
         i += 1;
     }
     WRITER.lock().set_colorcode(ColorCode::new_default());
-    ok();
 }
 
 #[test_case]
 pub fn serial_test_buffer() {
-    serial_print!("VGA buffer testing");
-    println!("\n");
-    ok();
+    // serial_print!("VGA buffer testing");
+    // println!("\n");
 }
 
 #[test_case]
 pub fn trivial_assertion() {
-    serial_print!("Trivial assertion");
+    // serial_print!("Trivial assertion");
     assert_eq!(1, 1);
-    ok();
 }
 
 #[test_case]
 pub fn your_mother() {
-    serial_print!("Your mother");
-    ok();
+    // serial_print!("Your mother");
 }

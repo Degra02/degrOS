@@ -1,12 +1,14 @@
 #![no_std]
 #![no_main]
 #![feature(custom_test_frameworks)]
-#![test_runner(crate::test_runner)]
+#![test_runner(crate::tests::tests_core::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
+
+use crate::tests::tests_core::{exit_qemu, QemuExitCode};
 use core::panic::PanicInfo;
 
-mod test;
+mod tests;
 mod vga_buffer;
 mod serial;
 mod utils;
@@ -14,11 +16,12 @@ mod utils;
 /// First function called at OS startup
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
+    utils::startup_message();
     utils::serial_startup_message();
     
     #[cfg(test)]
     test_main();
-
+    
     loop {}
 }
 
@@ -40,32 +43,4 @@ fn panic(_info: &PanicInfo) -> ! {
     serial_println!("Error {}", _info);
     exit_qemu(QemuExitCode::Failed);
     loop{}
-}
-
-/// Test runner framework
-#[cfg(test)]
-fn test_runner(tests: &[&dyn Fn()]) {
-    serial_println!("Running {} tests", tests.len());
-    for test in tests {
-        test();
-    }
-    
-    exit_qemu(QemuExitCode::Success);   
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[repr(u32)]
-pub enum QemuExitCode {
-    Success = 0x10,
-    Failed = 0x11,
-}
-
-/// Exit Quemu after all the tests are successful
-pub fn exit_qemu(exit_code: QemuExitCode) {
-    use x86_64::instructions::port::Port;
-    
-    unsafe {
-        let mut port = Port::new(0xf4);
-        port.write(exit_code as u32);    
-    }
 }
