@@ -10,8 +10,32 @@ pub fn ok() {
     serial_println!("]");
 }
 
+#[test_case]
+fn test_println() {
+    println!("testing simple vga buffer println output");
+} 
 
-// #[test_case]
+#[test_case]
+fn test_buffer_overflow() {
+    for i in 0..150 {
+        println!("testing buffer overflow");
+    }
+}
+
+#[test_case]
+fn test_println_output_eq() {
+    let s = "testing vga buffer eq";
+    WRITER.lock().clear_all();
+    println!("{}", s);
+    for (i, c) in s.chars().enumerate() {
+        let screen_char = WRITER.lock().get_buffer_mut().get_chars_mut()[0][i].read();
+        assert_eq!(char::from(screen_char.get_ascii_character()), c);
+    }
+    
+}
+
+
+#[test_case]
 pub fn test_buffer() {
     let test_str = "Buffer testing";
     let mut i: u8 = 0;
@@ -19,25 +43,18 @@ pub fn test_buffer() {
     for c in test_str.bytes() {
         color_code = ColorCode::new(Color::White, Color::from_u8(i));
         WRITER.lock().set_colorcode(color_code);
-        // serial_print!(c);
+        WRITER.lock().write_byte(c);
         i += 1;
     }
     WRITER.lock().set_colorcode(ColorCode::new_default());
 }
 
 #[test_case]
-pub fn serial_test_buffer() {
-    // serial_print!("VGA buffer testing");
-    // println!("\n");
-}
-
-#[test_case]
 pub fn trivial_assertion() {
-    // serial_print!("Trivial assertion");
     assert_eq!(1, 1);
 }
 
 #[test_case]
 pub fn your_mother() {
-    // serial_print!("Your mother");
+    println!("your mother");    
 }

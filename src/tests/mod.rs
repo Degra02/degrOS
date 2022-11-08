@@ -1,2 +1,2 @@
 pub mod tests_core;
-pub mod test;
+pub mod tests;

@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use crate::{serial_print, serial_println};
 
 
@@ -13,7 +14,7 @@ impl<T> Testable for T
         // Printing the test function name (type_name)
         serial_print!("{}\t", core::any::type_name::<T>());
         self(); // Running the test function
-        super::test::ok();
+        super::tests::ok();
     }
 }
 

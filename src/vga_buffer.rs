@@ -66,7 +66,7 @@ impl ColorCode {
 #[repr(C)]
 /// Single character represented by an ascii code
 /// and a color code
-struct ScreenChar {
+pub struct ScreenChar {
     ascii_character: u8,
     color_code: ColorCode,
 }
@@ -78,15 +78,25 @@ impl ScreenChar {
             color_code,
         }
     }
+    
+    pub fn get_ascii_character(&self) -> u8 {
+        self.ascii_character
+    }
 }
 
-const BUFFER_HEIGHT: usize = 25;
-const BUFFER_WIDTH: usize = 80;
+pub const BUFFER_HEIGHT: usize = 25;
+pub const BUFFER_WIDTH: usize = 80;
 
 #[repr(transparent)]
 /// Text Buffer
-struct Buffer {
+pub struct Buffer {
     chars: [[Volatile<ScreenChar>; BUFFER_WIDTH]; BUFFER_HEIGHT],
+}
+
+impl Buffer {
+    pub fn get_chars_mut(&mut self) -> &mut [[Volatile<ScreenChar>; BUFFER_WIDTH]; BUFFER_HEIGHT] {
+        &mut self.chars
+    }
 }
 
 /// Struct for the Write To Buffer
@@ -117,6 +127,18 @@ impl Writer {
             buffer: unsafe { &mut *(0xb8000 as *mut Buffer) },
         }
     }
+    
+    pub fn get_row_pos(&self) -> usize {
+        self.row_position
+    }
+    
+    pub fn get_col_pos(&self) -> usize {
+        self.column_position
+    }
+    
+    pub fn get_buffer_mut(&mut self) -> &mut Buffer {
+        &mut self.buffer
+    }
 
     /// Change the Writer color code
     pub fn set_colorcode(&mut self, cc: ColorCode) {
@@ -127,6 +149,11 @@ impl Writer {
         match byte {
             b'\n' => self.new_line(),
             byte => {
+                if self.row_position >= BUFFER_HEIGHT {
+                    self.clear_all();
+                    self.column_position = 0;
+                    self.row_position = 0;
+                }
                 if self.column_position >= BUFFER_WIDTH {
                     self.new_line();
                 }
@@ -171,7 +198,7 @@ impl Writer {
         self.column_position = 0;
     }
 
-    fn clear_all(&mut self, row: usize) {
+    pub fn clear_all(&mut self) {
         let blank = ScreenChar::new(b' ', self.color_code);
         for line in 0..BUFFER_HEIGHT - 1 {
             for col in 0..BUFFER_WIDTH - 1 {
