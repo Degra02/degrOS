@@ -3,6 +3,9 @@ name = "degrOS"
 version = "0.1.0"
 edition = "2021"
 
+[[test]]
+name = "should_panic"
+harness = false
 
 [dependencies]
 bootloader = "0.9.8"
