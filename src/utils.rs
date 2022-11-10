@@ -1,8 +1,9 @@
 use crate::{print, println, serial_println};
+use crate::vga_buffer::{WRITER, ColorCode, Color};
+
 
 /// Sending the default startup message
 pub fn startup_message() {
-    use crate::vga_buffer::{WRITER, ColorCode, Color};
 
     print!("Starting up ");
     WRITER.lock().set_colorcode(

@@ -1,23 +1,19 @@
 #![no_std]
 #![no_main]
 #![feature(custom_test_frameworks)]
-#![test_runner(crate::tests::tests_core::test_runner)]
+#![test_runner(degrOS::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
-
-use crate::tests::tests_core::{exit_qemu, QemuExitCode};
 use core::panic::PanicInfo;
-
-mod tests;
-mod vga_buffer;
-mod serial;
-mod utils;
+use degrOS::{serial_println, exit_qemu};
+use degrOS::QemuExitCode;
+pub mod utils;
+pub mod vga_buffer;
 
 /// First function called at OS startup
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
     utils::startup_message();
-    utils::serial_startup_message();
     
     #[cfg(test)]
     test_main();
@@ -29,8 +25,6 @@ pub extern "C" fn _start() -> ! {
 #[cfg(not(test))]
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
-    // With the println! macro, invoking
-    // the panic! macro will print where the code panicked
     println!("{}", _info);
     loop {}
 }
