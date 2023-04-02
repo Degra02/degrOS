@@ -79,11 +79,11 @@ impl ScreenChar {
             color_code,
         }
     }
-    
-    pub fn get_color_code(&self) -> ColorCode{
+
+    pub fn get_color_code(&self) -> ColorCode {
         self.color_code.clone()
     }
-    
+
     pub fn get_ascii_character(&self) -> u8 {
         self.ascii_character
     }
@@ -102,7 +102,7 @@ impl Buffer {
     pub fn get_chars(&self) -> &[[Volatile<ScreenChar>; BUFFER_WIDTH]; BUFFER_HEIGHT] {
         &self.chars
     }
-    
+
     pub fn get_chars_mut(&mut self) -> &mut [[Volatile<ScreenChar>; BUFFER_WIDTH]; BUFFER_HEIGHT] {
         &mut self.chars
     }
@@ -136,27 +136,27 @@ impl Writer {
             buffer: unsafe { &mut *(0xb8000 as *mut Buffer) },
         }
     }
-    
+
     /// Returns the get row pos of this [`Writer`].
     pub fn get_row_pos(&self) -> usize {
         self.row_position
     }
-    
+
     /// Returns the get col pos of this [`Writer`].
     pub fn get_col_pos(&self) -> usize {
         self.column_position
     }
-    
+
     /// Returns a immutable reference to the VGA Buffer
     pub fn get_buffer(&self) -> &Buffer {
         self.buffer
     }
-    
+
     /// Returns an mutable reference to the VGA Buffer
     pub fn get_buffer_mut(&mut self) -> &mut Buffer {
         &mut self.buffer
     }
-    
+
     pub fn get_colorcode(&self) -> ColorCode {
         self.color_code
     }
@@ -170,10 +170,10 @@ impl Writer {
         match byte {
             b'\n' => self.new_line(),
             byte => {
-                if self.row_position >= BUFFER_HEIGHT {
+                if self.row_position >= BUFFER_HEIGHT - 1 {
                     self.clear_all();
                 }
-                if self.column_position >= BUFFER_WIDTH {
+                if self.column_position >= BUFFER_WIDTH - 1 {
                     self.new_line();
                 }
 
@@ -209,10 +209,10 @@ impl Writer {
 
     /// Sets the Writer row position to the new one
     fn new_line(&mut self) {
-        if self.row_position < BUFFER_HEIGHT {
+        if self.row_position < BUFFER_HEIGHT - 1 {
             self.row_position += 1;
         } else {
-            self.row_position = 0;
+            self.clear_all();
         }
         self.column_position = 0;
     }
@@ -220,8 +220,8 @@ impl Writer {
     /// Clears the VGA Buffer
     pub fn clear_all(&mut self) {
         let blank = ScreenChar::new(b' ', self.color_code);
-        for line in 0..BUFFER_HEIGHT - 1 {
-            for col in 0..BUFFER_WIDTH - 1 {
+        for line in 0..BUFFER_HEIGHT {
+            for col in 0..BUFFER_WIDTH {
                 self.buffer.chars[line][col].write(blank);
             }
         }
@@ -254,7 +254,7 @@ macro_rules! print {
 }
 
 #[macro_export]
-/// Directly prints to the static WRITER appending 
+/// Directly prints to the static WRITER appending
 /// a newline at the end
 macro_rules! println {
     () => {
@@ -269,5 +269,9 @@ macro_rules! println {
 #[doc(hidden)]
 pub fn _print(args: fmt::Arguments) {
     use core::fmt::Write;
-    WRITER.lock().write_fmt(args).unwrap();
+    use x86_64::instructions::interrupts;
+
+    interrupts::without_interrupts(|| {
+        WRITER.lock().write_fmt(args).unwrap();
+    });
 }

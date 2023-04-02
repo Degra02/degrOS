@@ -13,14 +13,15 @@ pub mod vga_buffer;
 /// First function called at OS startup
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
-    utils::startup_message();
-
     degrOS::init();
+
+    utils::startup_message();
 
     #[cfg(test)]
     test_main();
 
-    loop {}
+    println!("Startup complete!");
+    degrOS::hlt_loop();
 }
 
 /// This function is called on panic.
@@ -28,7 +29,7 @@ pub extern "C" fn _start() -> ! {
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
     println!("{}", _info);
-    loop {}
+    degrOS::hlt_loop();
 }
 
 #[cfg(test)]

@@ -6,7 +6,7 @@
 
 use core::panic::PanicInfo;
 
-#[no_mangle] 
+#[no_mangle]
 pub extern "C" fn _start() -> ! {
     test_main();
 
@@ -18,14 +18,13 @@ fn panic(_info: &PanicInfo) -> ! {
     degrOS::test_panic_handler(_info)
 }
 
-
-use degrOS::{print, println, vga_buffer::*, serial_print, serial_println};
+use degrOS::{print, println, serial_print, serial_println, vga_buffer::*};
 
 pub fn ok() {
     serial_print!("...[");
-     WRITER.lock().set_colorcode(
-        ColorCode::new(Color::Green, Color::Black)   
-    );
+    WRITER
+        .lock()
+        .set_colorcode(ColorCode::new(Color::Green, Color::Black));
     serial_print!("OK");
     WRITER.lock().set_colorcode(ColorCode::new_default());
     serial_println!("]");
@@ -34,11 +33,11 @@ pub fn ok() {
 #[test_case]
 fn test_println() {
     println!("testing simple vga buffer println output");
-} 
+}
 
 #[test_case]
 fn test_buffer_overflow() {
-    for i in 0..150 {
+    for _ in 0..150 {
         println!("testing buffer overflow");
     }
 }
@@ -52,7 +51,6 @@ fn test_println_output_eq() {
         let screen_char = WRITER.lock().get_buffer_mut().get_chars_mut()[0][i].read();
         assert_eq!(char::from(screen_char.get_ascii_character()), c);
     }
-    
 }
 
 #[test_case]
@@ -74,5 +72,6 @@ pub fn trivial_assertion() {
 
 #[test_case]
 pub fn your_mother() {
-    println!("your mother");    
+    println!("your mother");
 }
+

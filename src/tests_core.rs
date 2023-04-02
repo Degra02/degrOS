@@ -1,7 +1,6 @@
 #![allow(dead_code)]
 use crate::{serial_print, serial_println};
 
-
 /// Trait specifying that a Fn is a test function
 /// and implementing automatic printing
 pub trait Testable {
@@ -9,7 +8,9 @@ pub trait Testable {
 }
 
 impl<T> Testable for T
-    where T: Fn(), {
+where
+    T: Fn(),
+{
     fn run(&self) -> () {
         // Printing the test function name (type_name)
         serial_print!("{}\t", core::any::type_name::<T>());
@@ -25,8 +26,8 @@ pub fn test_runner(tests: &[&dyn Testable]) {
     for test in tests {
         test.run();
     }
-    
-    exit_qemu(QemuExitCode::Success);   
+
+    exit_qemu(QemuExitCode::Success);
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -39,9 +40,9 @@ pub enum QemuExitCode {
 /// Exit Quemu after all the tests are successful
 pub fn exit_qemu(exit_code: QemuExitCode) {
     // use x86_64::instructions::port::Port;
-    
+
     unsafe {
         let mut port = Port::new(0xf4);
-        port.write(exit_code as u32);    
+        port.write(exit_code as u32);
     }
 }
