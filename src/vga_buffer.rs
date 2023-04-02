@@ -142,9 +142,19 @@ impl Writer {
         self.row_position
     }
 
+    /// Returns a mutable reference to the row position of the ['Writer']
+    pub fn get_row_pos_mut(&mut self) -> &mut usize {
+        &mut self.row_position
+    }
+
     /// Returns the get col pos of this [`Writer`].
     pub fn get_col_pos(&self) -> usize {
         self.column_position
+    }
+
+    /// Returns a mutable reference to the column position of the ['Writer']
+    pub fn get_col_pos_mut(&mut self) -> &mut usize {
+        &mut self.column_position
     }
 
     /// Returns a immutable reference to the VGA Buffer
@@ -228,6 +238,18 @@ impl Writer {
         self.column_position = 0;
         self.row_position = 0;
     }
+
+    pub fn backspace_pressed(&mut self) {
+        let blank = ScreenChar::new(b' ', self.color_code);
+
+        if self.column_position > 0 {
+            self.buffer.chars[self.row_position][self.column_position - 1].write(blank);
+            self.column_position -= 1;
+        } else if self.row_position > 0 {
+            self.row_position -= 1;
+            self.column_position = BUFFER_WIDTH - 1;
+        }
+    }
 }
 
 /// WRITER so it doesn't have to be
@@ -266,6 +288,20 @@ macro_rules! println {
     };
 }
 
+#[macro_export]
+macro_rules! clear_buffer {
+    () => {
+        $crate::vga_buffer::_clear_all()
+    };
+}
+
+#[macro_export]
+macro_rules! backspace_pressed {
+    () => {
+        $crate::vga_buffer::_backspace_pressed()
+    };
+}
+
 #[doc(hidden)]
 pub fn _print(args: fmt::Arguments) {
     use core::fmt::Write;
@@ -274,4 +310,22 @@ pub fn _print(args: fmt::Arguments) {
     interrupts::without_interrupts(|| {
         WRITER.lock().write_fmt(args).unwrap();
     });
+}
+
+#[doc(hidden)]
+pub fn _clear_all() {
+    use core::fmt::Write;
+    use x86_64::instructions::interrupts;
+
+    interrupts::without_interrupts(|| {
+        WRITER.lock().clear_all();
+    });
+}
+
+#[doc(hidden)]
+pub fn _backspace_pressed() {
+    use core::fmt::Write;
+    use x86_64::instructions::interrupts;
+
+    interrupts::without_interrupts(|| WRITER.lock().backspace_pressed());
 }

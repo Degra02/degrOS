@@ -55,8 +55,8 @@ pub fn test_panic_handler(_info: &PanicInfo) -> ! {
 #[cfg(test)]
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
-    utils::serial_startup_message();
     init();
+    utils::serial_startup_message();
     test_main();
 
     hlt_loop();
