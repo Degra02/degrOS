@@ -114,9 +114,10 @@ pub struct Writer {
     row_position: usize,
     color_code: ColorCode,
     buffer: &'static mut Buffer,
+    timer_count: u128,
 }
 
-use core::fmt;
+use core::{fmt, u128};
 
 impl fmt::Write for Writer {
     fn write_str(&mut self, s: &str) -> fmt::Result {
@@ -129,11 +130,14 @@ impl Writer {
     /// Creates a new Writer instance from column position, row position
     /// and ColorCode
     pub fn new(cpos: usize, rpos: usize, cc: ColorCode) -> Writer {
+        let cursor = unsafe { &mut *(0x0A as *mut Buffer) };
+
         Writer {
             column_position: cpos,
             row_position: rpos,
             color_code: cc.clone(),
             buffer: unsafe { &mut *(0xb8000 as *mut Buffer) },
+            timer_count: 0,
         }
     }
 
@@ -197,8 +201,15 @@ impl Writer {
                 });
 
                 self.column_position += 1;
+
+                self.update_cursor();
             }
         }
+    }
+
+    fn update_cursor(&mut self) {
+        let cursor = ScreenChar::new(b'_', self.color_code);
+        self.buffer.chars[self.row_position][self.column_position].write(cursor);
     }
 
     /// Writes a string by converting it to bytes
@@ -219,12 +230,16 @@ impl Writer {
 
     /// Sets the Writer row position to the new one
     fn new_line(&mut self) {
+        let blank = ScreenChar::new(b' ', self.color_code);
+        self.buffer.chars[self.row_position][self.column_position].write(blank);
         if self.row_position < BUFFER_HEIGHT - 1 {
             self.row_position += 1;
         } else {
             self.clear_all();
         }
         self.column_position = 0;
+
+        self.update_cursor();
     }
 
     /// Clears the VGA Buffer
@@ -241,6 +256,7 @@ impl Writer {
 
     pub fn backspace_pressed(&mut self) {
         let blank = ScreenChar::new(b' ', self.color_code);
+        self.buffer.chars[self.row_position][self.column_position].write(blank);
 
         if self.column_position > 0 {
             self.buffer.chars[self.row_position][self.column_position - 1].write(blank);
@@ -248,6 +264,19 @@ impl Writer {
         } else if self.row_position > 0 {
             self.row_position -= 1;
             self.column_position = BUFFER_WIDTH - 1;
+        }
+        self.update_cursor();
+    }
+
+    pub fn update_timer(&mut self) {
+        self.timer_count += 1;
+        let mut cnt = self.timer_count;
+
+        for i in (0..4).rev() {
+            let val = cnt / 10;
+            cnt /= 10;
+            let char = ScreenChar::new(val as u8, self.color_code);
+            let val = self.buffer.chars[BUFFER_HEIGHT - 1][BUFFER_WIDTH - i - 1].write(char);
         }
     }
 }
@@ -263,6 +292,7 @@ lazy_static! {
         row_position: 0,
         color_code: ColorCode::new(Color::White, Color::Black),
         buffer: unsafe { &mut *(0xb8000 as *mut Buffer) },
+        timer_count: 0
     });
 }
 
@@ -328,4 +358,11 @@ pub fn _backspace_pressed() {
     use x86_64::instructions::interrupts;
 
     interrupts::without_interrupts(|| WRITER.lock().backspace_pressed());
+}
+
+pub fn _update_timer() {
+    use core::fmt::Write;
+    use x86_64::instructions::interrupts;
+
+    interrupts::without_interrupts(|| WRITER.lock().update_timer());
 }
