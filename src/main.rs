@@ -16,7 +16,7 @@ use x86_64::{structures::paging::PageTable, VirtAddr};
 entry_point!(kernel_main);
 
 /// First function called at OS startup
-fn kernel_main(boot_info: &'static BootInfo) -> ! {
+fn kernel_main(_boot_info: &'static BootInfo) -> ! {
     degrOS::init();
 
     utils::startup_message();
