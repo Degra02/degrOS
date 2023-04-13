@@ -30,7 +30,7 @@ where
 {
     fn run(&self) -> () {
         // Printing the test function name (type_name)
-        serial_print!("{}\t", core::any::type_name::<T>());
+        serial_print!("{: <25}", core::any::type_name::<T>());
         self(); // Running the test function
         serial_println!("...[OK]")
     }
